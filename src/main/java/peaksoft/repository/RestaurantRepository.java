@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
-//        @Query("select u from Restaurant r join r.users u")
-//        List<User> getAllUsers();
-//        boolean existsByName(String name);
+        @Query("select u from Restaurant r join r.users u")
+        List<User> getAllUsers();
+        boolean existsByName(String name);
 }
