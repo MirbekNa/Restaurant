@@ -41,15 +41,15 @@ public class ChequeAPI {
         return service.deleteCheque(id);
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/averageSum")
-    public AverageSumResponse getAverageSum(@RequestParam LocalDate date){
-        return  service.getAverageSum(date);
-    }
-
-    @PreAuthorize("hasAuthority('WAITER')")
-    @GetMapping("/averageSumOfWaiter")
-    public AverageSumResponse getAverageSumOfWaiter(@RequestParam Long id, @RequestParam LocalDate dateTime){
-        return service.getAverageSumOfWaiter(id, dateTime);
-    }
+//    @PreAuthorize("hasAuthority('ADMIN')")
+//    @GetMapping("/averageSum")
+//    public AverageSumResponse getAverageSum(@RequestParam LocalDate date){
+//        return  service.getAverageSum(date);
+//    }
+//
+//    @PreAuthorize("hasAuthority('WAITER')")
+//    @GetMapping("/averageSumOfWaiter")
+//    public AverageSumResponse getAverageSumOfWaiter(@RequestParam Long id, @RequestParam LocalDate dateTime){
+//        return service.getAverageSumOfWaiter(id, dateTime);
+//    }
 }

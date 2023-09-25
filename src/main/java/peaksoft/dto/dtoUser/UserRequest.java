@@ -1,9 +1,10 @@
 package peaksoft.dto.dtoUser;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import peaksoft.enums.Role;
-import peaksoft.validation.email.EmailValidation;
+
 import peaksoft.validation.phoneNumber.PhoneNumberValid;
 import peaksoft.validation.passwordAnotation.PasswordValidator;
 
@@ -18,7 +19,8 @@ public record UserRequest(
         String lastName,
         @NotNull
         LocalDate dateOfBirth,
-       @EmailValidation
+       @Email
+
         String email,
         @PasswordValidator
         String password,
