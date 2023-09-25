@@ -1,7 +1,10 @@
 package peaksoft.api;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import peaksoft.dto.dtoAuth.AdminTokenRequest;
 import peaksoft.dto.dtoAuth.AuthenticationResponse;
 import peaksoft.dto.dtoAuth.SignInRequest;
@@ -18,7 +21,7 @@ public class AuthAPI {
        return authenticationService.getAdminToken(adminTokenRequest);
    }
 
-   @PostMapping("/signIn")
+   @GetMapping("/signIn")
    public AuthenticationResponse signIn(@RequestBody SignInRequest signInRequest){
         return authenticationService.signIn(signInRequest);
    }

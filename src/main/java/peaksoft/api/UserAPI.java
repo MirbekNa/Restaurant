@@ -19,18 +19,19 @@ public class UserAPI {
     private final UserService service;
 
     @PreAuthorize("hasAnyAuthority('ADMIN','WAITER','CHEF')")
-    @GetMapping
+    @GetMapping("/getAll")
     PaginationResponse getAllUsers(@RequestParam int pageSize,int currentPage){
         return service.getAllUsers(currentPage,pageSize);
     }
 
     @PostMapping
+            ("/registe")
     public SimpleResponse registerUser(@RequestBody @Valid UserRequest userRequest) throws BadCredentialException, BadRequestException {
         return service.registerToJob(userRequest);
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PutMapping
+    @PutMapping("/acceptOrReject")
     public  SimpleResponse AcceptOrReject(@RequestParam Long userId,@RequestParam Long restaurantId, @RequestParam String word){
         return service.acceptUser(userId, restaurantId, word);
     }
@@ -41,19 +42,19 @@ public class UserAPI {
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','WAITER','CHEF')")
-    @GetMapping("{id}")
+    @GetMapping("/getById/{id}")
     public UserResponse getUserById(@PathVariable Long id) throws BadCredentialException {
         return service.getUserById(id);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','WAITER','CHEF')")
-    @DeleteMapping("{id}")
+    @DeleteMapping("/deleteUser/{id}")
     public SimpleResponse deleteUserById(@PathVariable Long id) throws BadCredentialException {
         return service.deleteUserById(id);
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PostMapping("saveByAdmin")
+    @PostMapping("saveUser")
     public SimpleResponse saveUserByAdmin(@RequestParam Long id,@RequestBody @Valid UserRequest userRequest) throws BadCredentialException, BadRequestException {
         return service.saveUser(id,userRequest);
     }

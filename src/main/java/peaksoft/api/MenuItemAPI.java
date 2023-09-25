@@ -19,7 +19,7 @@ public class MenuItemAPI {
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @GetMapping("/getAll")
     public PaginationMenuItemResponse getAllMenuItems(@RequestParam String ascDesc,
-                                                       @RequestParam int currentPage,
+                                                      @RequestParam int currentPage,
                                                       @RequestParam  int pageSize){
         return service.getAllMenuItems(ascDesc, currentPage, pageSize);
     }

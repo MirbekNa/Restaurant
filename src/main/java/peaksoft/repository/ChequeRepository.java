@@ -12,9 +12,4 @@ import java.time.LocalDate;
 
 public interface ChequeRepository extends JpaRepository<Cheque, Long> {
 
-    @Query("select new peaksoft.dto.dtoCheque.ChequeResponse(c.id,c.priceAverage) from Cheque c")
-    Page<ChequeResponse> getAllCheques(Pageable pageable);
-
-    @Query("select sum(c.priceAverage) from Cheque c join c.user u join u.cheques ch where u.id=:id and ch.createdAt=:date")
-    int averageSumOfWaiter(@Param("id") Long id,@Param("date") LocalDate date);
 }
