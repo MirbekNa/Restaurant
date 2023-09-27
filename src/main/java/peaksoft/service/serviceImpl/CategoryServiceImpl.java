@@ -6,13 +6,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import peaksoft.dto.SimpleResponse;
 import peaksoft.dto.dtoCategory.CategoryRequest;
 import peaksoft.dto.dtoCategory.CategoryResponse;
-import peaksoft.dto.dtoCategory.PaginationResponse;
 import peaksoft.entity.Category;
 import peaksoft.entity.User;
 import peaksoft.exceptions.BadRequestException;
@@ -21,12 +24,15 @@ import peaksoft.repository.CategoryRepository;
 import peaksoft.repository.UserRepository;
 import peaksoft.service.CategoryService;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository repository;
     private final UserRepository userRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     private User getAuthentication(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -34,15 +40,14 @@ public class CategoryServiceImpl implements CategoryService {
         User user = userRepository.getUserByEmail(name).orElseThrow(() -> new NotFoundException("User with email: " + name + " us bit found!"));
         return  user;
     }
-    @Override
-    public PaginationResponse getAllCategories(int currentPage, int pageSize) {
-        Pageable pageable = PageRequest.of(currentPage-1, pageSize);
-        Page<CategoryResponse> allCategories = repository.getAllCategories(pageable);
-        return PaginationResponse.builder()
-                .categories(allCategories.getContent())
-                .currentPage(allCategories.getNumber()+1)
-                .pageSize(allCategories.getTotalPages())
-                .build();
+
+    public List<CategoryResponse> getAllCategories() {
+        String query = "SELECT id, name FROM categories";
+        return jdbcTemplate.query(query, (rs, rowNum) -> {
+            Long id = rs.getLong("id");
+            String name = rs.getString("name");
+            return new CategoryResponse(id, name);
+        });
     }
 
     @Override
@@ -88,14 +93,19 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public PaginationResponse searchCategoryByName(String word, int currentPage, int pageSize) {
-        Pageable pageable = PageRequest.of(currentPage-1,pageSize);
-        Page<CategoryResponse> search = repository.search(word, pageable);
-        return PaginationResponse.builder()
-                .categories(search.getContent())
-                .currentPage(search.getNumber()+1)
-                .pageSize(search.getTotalPages())
+    public List<CategoryResponse> searchCategoryByName(String word) {
+        String sql = "SELECT id, name FROM categories WHERE name ILIKE :word";
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("word", "%" + word + "%");
+
+        RowMapper<CategoryResponse> rowMapper = (rs, rowNum) -> CategoryResponse.builder()
+                .id(rs.getLong("id"))
+                .name(rs.getString("name"))
                 .build();
+
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate.getDataSource());
+        return namedParameterJdbcTemplate.query(sql, params, rowMapper);
     }
 
 

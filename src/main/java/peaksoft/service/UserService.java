@@ -16,4 +16,5 @@ public interface UserService {
     SimpleResponse deleteUserById(Long id) throws BadCredentialException;
     UserResponse getUserById(Long id) throws BadCredentialException;
     SimpleResponse saveUser(Long restaurantId,UserRequest userRequest) throws BadCredentialException, BadRequestException;
+
 }

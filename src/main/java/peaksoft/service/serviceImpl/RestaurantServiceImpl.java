@@ -3,6 +3,7 @@ package peaksoft.service.serviceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import peaksoft.dto.SimpleResponse;
 import peaksoft.dto.dtoRestaurant.RestaurantRequest;
@@ -26,10 +27,22 @@ public class RestaurantServiceImpl implements RestaurantService {
     private final MenuItemRepository menuItemRepository;
     private final StopListRepository stopListRepository;
     private final CategoryRepository categoryRepository;
-
+    private final JdbcTemplate jdbcTemplate;
     @Override
     public List<RestaurantRequest> getAllRestaurant() {
-        return null;
+        String sql = "SELECT * FROM restaurants";
+
+        List<RestaurantRequest> restaurants = jdbcTemplate.query(sql, (rs, rowNum) -> {
+            return RestaurantRequest.builder()
+                    .name(rs.getString("name"))
+                    .location(rs.getString("location"))
+                    .restType(rs.getString("rest_type"))
+                    .numberOfEmployees(rs.getInt("number_of_employees"))
+                    .service(rs.getInt("service"))
+                    .build();
+        });
+
+        return restaurants;
     }
 
     @Override

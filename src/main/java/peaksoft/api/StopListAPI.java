@@ -4,11 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import peaksoft.dto.SimpleResponse;
-import peaksoft.dto.dtoStopList.PaginationStopListResponse;
 import peaksoft.dto.dtoStopList.StopListRequest;
 import peaksoft.dto.dtoStopList.StopListResponse;
 import peaksoft.exceptions.BadRequestException;
 import peaksoft.service.StopListService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/listStop")
@@ -18,8 +19,8 @@ public class StopListAPI {
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @GetMapping("/getAll")
-    public PaginationStopListResponse getAllStopLists(@RequestParam int currentPage,@RequestParam int pageSize){
-        return service.getAllStopLists(currentPage, pageSize);
+    public List<StopListResponse> getAllStopLists(@RequestParam String ascDesc) {
+        return service.getAll(ascDesc);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF')")

@@ -4,32 +4,33 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import peaksoft.dto.SimpleResponse;
-import peaksoft.dto.dtoSubcategory.PaginationSubCategoryResponse;
 import peaksoft.dto.dtoSubcategory.SubCategoryRequest;
 import peaksoft.dto.dtoSubcategory.SubCategoryResponse;
 import peaksoft.service.SubCategoryService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/subCategories")
 @RequiredArgsConstructor
-public class  SubCategoryAPI {
+public class SubCategoryAPI {
     private final SubCategoryService service;
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @GetMapping("/getAll")
-    public PaginationSubCategoryResponse getAllSubCategories(@RequestParam int currentPage, @RequestParam int pageSize){
-        return service.getAllSubCategory(currentPage, pageSize);
+    public List<SubCategoryResponse> getAllSubCategories(){
+        return service.getAllSubCategory();
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @PostMapping("/saveSubCategory")
-    public SimpleResponse saveSubCategory(@RequestParam Long categoryId,@RequestBody SubCategoryRequest subCategoryRequest){
+    public SimpleResponse saveSubCategory(@RequestParam Long categoryId, @RequestBody SubCategoryRequest subCategoryRequest){
         return service.saveSubCategory(categoryId, subCategoryRequest);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @PutMapping("/update/{id}")
-    public SimpleResponse updateSubCategory(@PathVariable Long id,@RequestBody SubCategoryRequest subCategoryRequest){
+    public SimpleResponse updateSubCategory(@PathVariable Long id, @RequestBody SubCategoryRequest subCategoryRequest){
         return service.updateSubCategory(id, subCategoryRequest);
     }
 
@@ -47,24 +48,18 @@ public class  SubCategoryAPI {
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @GetMapping("/filterSubCategoryByCategoryName")
-    public PaginationSubCategoryResponse filterSubCategoryByCategoryName(@RequestParam String name,
-                                                                         @RequestParam int currentPage ,
-                                                                         @RequestParam int pageSize){
-        return service.filterSubCategoryByCategory(name, currentPage, pageSize);
+    public List<SubCategoryResponse> filterSubCategoryByCategoryName(@RequestParam String name){
+        return service.filterSubCategoryByCategory(name);
     }
-
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
-    @GetMapping("/byGroup")
-    public PaginationSubCategoryResponse getSubCategoryByGroup(@RequestParam int currentPage ,
-                                                               @RequestParam int pageSize){
-        return service.getAllSubCategoryByGroup(currentPage, pageSize);
+    @GetMapping("/getAllSubCategoryByGroup")
+    public List<SubCategoryResponse>getAllSubCategoryByGroup(){
+        return service.getAllSubCategoryByGroup();
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @GetMapping("/search")
-    public PaginationSubCategoryResponse search(@RequestParam String word,
-                                                @RequestParam int currentPage ,
-                                                @RequestParam int pageSize){
-        return service.searchByName(word, currentPage, pageSize);
+    public List<SubCategoryResponse> search(@RequestParam String word){
+        return service.searchByName(word);
     }
 }

@@ -3,14 +3,14 @@ package peaksoft.service.serviceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import peaksoft.dto.SimpleResponse;
-import peaksoft.dto.dtoCheque.AverageSumResponse;
 import peaksoft.dto.dtoCheque.ChequeRequest;
 import peaksoft.dto.dtoCheque.ChequeResponse;
-import peaksoft.dto.dtoCheque.PaginationChequeResponse;
 import peaksoft.entity.Cheque;
 import peaksoft.entity.MenuItem;
 import peaksoft.entity.Restaurant;
@@ -23,6 +23,7 @@ import peaksoft.repository.UserRepository;
 import peaksoft.service.ChequeService;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,18 +36,46 @@ public class ChequeServiceImpl implements ChequeService {
     private final UserRepository userRepository;
     private final MenuItemRepository menuItemRepository;
     private final RestaurantRepository restaurantRepository;
-
-    private User getAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String name = authentication.getName();
-        User user = userRepository.getUserByEmail(name).orElseThrow(() -> new NotFoundException("User with email: " + name + " us bit found!"));
-        return user;
-    }
+private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public PaginationChequeResponse getAllCheques() {
-        return null;
+    public List<ChequeResponse> getAllCheques() {
+        String sql = "SELECT u.first_name AS full_name, c.price_average, r.service, " +
+                "(c.price_average * r.service / 100) + c.price_average AS grand_total, c.created_at " +
+                "FROM cheques c " +
+                "LEFT JOIN users u ON c.user_id = u.id " +
+                "LEFT JOIN restaurants r ON u.restaurant_id = r.id " +
+                "ORDER BY c.id";
+        RowMapper<ChequeResponse> rowMapper = (rs, rowNum) -> {
+            Long id = rs.getLong("id");
+            String waiterFullName = rs.getString("waiter_full_name");
+            int priceAverage = rs.getInt("price_average");
+            int service = rs.getInt("service");
+            LocalDateTime createdAt = rs.getTimestamp("created_at").toLocalDateTime();
+            ChequeResponse chequeResponse = ChequeResponse.builder()
+                    .id(id)
+                    .waiterFullName(waiterFullName)
+                    .priceAverage(priceAverage)
+                    .service(service)
+                    .createdAt(createdAt)
+                    .items(new ArrayList<>())
+                    .build();
+            return chequeResponse;
+        };
+        List<ChequeResponse> chequeResponses = jdbcTemplate.query(sql, rowMapper);
+        for (ChequeResponse chequeResponse : chequeResponses) {
+            sql = "SELECT mi.name AS item " +
+                    "FROM cheque_menu_item cm " +
+                    "LEFT JOIN menu_items mi ON cm.menu_item_id = mi.id " +
+                    "WHERE cm.cheque_id = ?";
+
+            List<String> items = jdbcTemplate.queryForList(sql, String.class, chequeResponse.getId());
+            chequeResponse.setItems(items);
+        }
+        return chequeResponses;
     }
+
+
 
     @Override
     public SimpleResponse saveCheque(Long userId, ChequeRequest chequeRequest) {
