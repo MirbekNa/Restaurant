@@ -9,6 +9,8 @@ import peaksoft.dto.dtoRestaurant.RestaurantResponse;
 import peaksoft.exceptions.BadRequestException;
 import peaksoft.service.RestaurantService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/restaurant")
 @RequiredArgsConstructor
@@ -20,16 +22,20 @@ public class RestaurantAPI {
     public SimpleResponse saveRestaurant(@RequestBody RestaurantRequest restaurantRequest){
         return service.saveRestaurant(restaurantRequest);
     }
-
     @PreAuthorize("hasAuthority('ADMIN')")
-    @PutMapping("/update")
+    @GetMapping("/getAll")
+    public List<RestaurantRequest> getAllRestaurants() {
+        return service.getAllRestaurant();
+    }
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/update/{id}")
     public SimpleResponse updateRestaurant(@PathVariable Long id,@RequestBody RestaurantRequest restaurantRequest){
         return service.updateRestaurant(id, restaurantRequest);
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/getById/{id}")
-    public RestaurantResponse getBuId(@PathVariable Long id){
+    public RestaurantResponse getById(@PathVariable Long id){
         return service.getRestaurantById(id);
     }
 

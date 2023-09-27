@@ -2,13 +2,12 @@ package peaksoft.service.serviceImpl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import peaksoft.dto.SimpleResponse;
-import peaksoft.dto.dtoStopList.PaginationStopListResponse;
 import peaksoft.dto.dtoStopList.StopListRequest;
 import peaksoft.dto.dtoStopList.StopListResponse;
 import peaksoft.entity.MenuItem;
@@ -28,18 +27,23 @@ import java.util.List;
 public class StopListServiceImpl implements StopListService {
     private final StopListRepository repository;
     private final MenuItemRepository menuItemRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public PaginationStopListResponse getAllStopLists(int currentPage, int pageSize) {
-        Pageable pageable = PageRequest.of(currentPage-1,pageSize);
-        Page<StopListResponse> allListStop = repository.getAllListStop(pageable);
-        return PaginationStopListResponse.builder()
-                .stopListResponses(allListStop.getContent())
-                .currentPage(allListStop.getNumber()+1)
-                .pageSize(allListStop.getTotalPages())
-                .build();
-    }
+    public List<StopListResponse> getAll(String ascDesc) {
+        String sql = "SELECT s.id, s.reason, s.date, m.name as product_name FROM stopLists s " +
+                "JOIN menu_items m ON s.menu_item_id = m.id " +
+                "ORDER BY m.name " + ascDesc;
 
+        RowMapper<StopListResponse> rowMapper = (rs, rowNum) -> StopListResponse.builder()
+                .id(rs.getLong("id"))
+                .reason(rs.getString("reason"))
+                .date(rs.getDate("date").toLocalDate())
+                .productName(rs.getString("product_name"))
+                .build();
+
+        return jdbcTemplate.query(sql, rowMapper);
+    }
     @Override
     public SimpleResponse saveStopList(Long menuItemId, StopListRequest stopListRequest) throws BadRequestException {
         MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> new NotFoundException(String.format("MenuItem with id:%s is not present", menuItemId)));

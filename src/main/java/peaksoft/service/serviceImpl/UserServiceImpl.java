@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,7 @@ import peaksoft.service.UserService;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.List;
 
 @Service
 @Transactional
@@ -38,7 +40,7 @@ public class UserServiceImpl implements UserService {
     private final RestaurantRepository restaurantRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
-        int counter = 0;
+
     private User getAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String name = authentication.getName();
@@ -48,15 +50,33 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public PaginationResponse getAllUsers(int currentPage, int pageSize) {
-        Pageable pageable = PageRequest.of(currentPage - 1, pageSize);
-        Page<UserResponse> allUsers = repository.getAllUsers(pageable);
+        int offset = (currentPage - 1) * pageSize;
+
+        String countQuery = "SELECT COUNT(*) FROM users";
+        int totalRecords = jdbcTemplate.queryForObject(countQuery, Integer.class);
+        String sql = "SELECT id, first_name, last_name, date_of_birth, email, phone_number, role, experience FROM users LIMIT ? OFFSET ?";
+
+        RowMapper<UserResponse> rowMapper = (rs, rowNum) -> UserResponse.builder()
+                .id(rs.getLong("id"))
+                .firstName(rs.getString("first_name"))
+                .lastName(rs.getString("last_name"))
+                .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
+                .email(rs.getString("email"))
+                .phoneNumber(rs.getString("phone_number"))
+                .role(Role.valueOf(rs.getString("role")))
+                .experience(rs.getInt("experience"))
+                .build();
+
+        List<UserResponse> users = jdbcTemplate.query(sql, rowMapper, pageSize, offset);
 
         return PaginationResponse.builder()
-                .userResponseList(allUsers.getContent())
-                .page(allUsers.getNumber() + 1)
-                .size(allUsers.getTotalPages())
+                .userResponseList(users)
+                .page(currentPage)
+                .size((int) Math.ceil((double) totalRecords / pageSize))
                 .build();
     }
+
+
 
     @Override
     public SimpleResponse registerToJob(UserRequest userRequest) throws BadCredentialException, BadRequestException {

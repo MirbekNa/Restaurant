@@ -11,8 +11,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-   @Query("select new peaksoft.dto.dtoUser.UserResponse(u.id,u.firstName,u.lastName,u.dateOfBirth,u.email,u.password,u.phoneNumber,u.role,u.experience) from User u")
-   Page<UserResponse> getAllUsers(Pageable pageable);
+
 
    Optional <User> getUserByEmail(String email);
 

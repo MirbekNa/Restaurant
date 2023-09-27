@@ -4,12 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import peaksoft.dto.SimpleResponse;
-import peaksoft.dto.dtoCheque.AverageSumResponse;
 import peaksoft.dto.dtoCheque.ChequeRequest;
 import peaksoft.dto.dtoCheque.ChequeResponse;
 import peaksoft.service.ChequeService;
 
-import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/cheque")
@@ -41,15 +40,10 @@ public class ChequeAPI {
         return service.deleteCheque(id);
     }
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/averageSum")
-//    public AverageSumResponse getAverageSum(@RequestParam LocalDate date){
-//        return  service.getAverageSum(date);
-//    }
-//
-//    @PreAuthorize("hasAuthority('WAITER')")
-//    @GetMapping("/averageSumOfWaiter")
-//    public AverageSumResponse getAverageSumOfWaiter(@RequestParam Long id, @RequestParam LocalDate dateTime){
-//        return service.getAverageSumOfWaiter(id, dateTime);
-//    }
+    @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
+    @GetMapping("/getAll")
+    public List<ChequeResponse> getAll() {
+        return service.getAllCheques();
+    }
+
 }

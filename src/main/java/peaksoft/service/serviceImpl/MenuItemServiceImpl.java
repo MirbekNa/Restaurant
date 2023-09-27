@@ -6,11 +6,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import peaksoft.dto.SimpleResponse;
 import peaksoft.dto.dtoMenuItem.MenuItemRequest;
 import peaksoft.dto.dtoMenuItem.MenuItemResponse;
-import peaksoft.dto.dtoMenuItem.PaginationMenuItemResponse;
 import peaksoft.entity.MenuItem;
 import peaksoft.entity.Restaurant;
 import peaksoft.entity.StopList;
@@ -33,27 +36,24 @@ public class MenuItemServiceImpl implements MenuItemService {
     private final RestaurantRepository restaurantRepository;
     private final SubCategoryRepository subCategoryRepository;
     private final StopListRepository stopListRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public PaginationMenuItemResponse getAllMenuItems(String ascDesc, int currentPage, int pageSize) {
-        if (ascDesc.equals("asc")){
-        Pageable pageable = PageRequest.of(currentPage-1,pageSize);
-        Page<MenuItemResponse> allMenuItems = repository.getAllMenuItems(ascDesc, pageable);
-        return PaginationMenuItemResponse.builder()
-                .menuItemResponses(allMenuItems.getContent())
-                .currentPage(allMenuItems.getNumber()+1)
-                .pageSize(allMenuItems.getTotalPages())
+    public List<MenuItemResponse> getAllMenuItems() {
+        String sql = "SELECT id, name, image, price, description, is_vegetarian " +
+                "FROM menuItems ";
+
+        RowMapper<MenuItemResponse> rowMapper = (rs, rowNum) -> MenuItemResponse.builder()
+                .id(rs.getLong("id"))
+                .name(rs.getString("name"))
+                .image(rs.getString("image"))
+                .price(rs.getInt("price"))
+                .description(rs.getString("description"))
+                .isVegetarian(rs.getBoolean("is_vegetarian"))
                 .build();
-        }else if (ascDesc.equals("desc")){
-            Pageable pageable = PageRequest.of(currentPage-1,pageSize);
-            Page<MenuItemResponse> allMenuItems = repository.getAllMenuItemsDesc(ascDesc, pageable);
-            return PaginationMenuItemResponse.builder()
-                    .menuItemResponses(allMenuItems.getContent())
-                    .currentPage(allMenuItems.getNumber()+1)
-                    .pageSize(allMenuItems.getTotalPages())
-                    .build();
-        }
-        return null;
+
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate.getDataSource());
+        return namedParameterJdbcTemplate.query(sql, rowMapper);
     }
 
     @Override
@@ -123,25 +123,48 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     }
 
+
     @Override
-    public PaginationMenuItemResponse searchByName(String word, int currentPage, int pageSize) {
-        Pageable pageable = PageRequest.of(currentPage-1,pageSize);
-        Page<MenuItemResponse> search = repository.search(word, pageable);
-        return PaginationMenuItemResponse.builder()
-                .menuItemResponses(search.getContent())
-                .currentPage(search.getNumber()+1)
-                .pageSize(search.getTotalPages())
+    public List<MenuItemResponse> searchByName(String word) {
+        String sql = "SELECT id, name, image, price, description, is_vegetarian " +
+                "FROM menu_items " +
+                "WHERE name ILIKE :word";
+
+        RowMapper<MenuItemResponse> rowMapper = (rs, rowNum) -> MenuItemResponse.builder()
+                .id(rs.getLong("id"))
+                .name(rs.getString("name"))
+                .image(rs.getString("image"))
+                .price(rs.getInt("price"))
+                .description(rs.getString("description"))
+                .isVegetarian(rs.getBoolean("is_vegetarian"))
                 .build();
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("word", "%" + word + "%");
+
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate.getDataSource());
+        return namedParameterJdbcTemplate.query(sql, params, rowMapper);
     }
 
     @Override
-    public PaginationMenuItemResponse filterByIsVegetarian(boolean isVegetarian, int currentPage, int pageSize) {
-        Pageable pageable = PageRequest.of(currentPage-1,pageSize);
-        Page<MenuItemResponse> search = repository.filterByIsVegetarian(isVegetarian, pageable);
-        return PaginationMenuItemResponse.builder()
-                .menuItemResponses(search.getContent())
-                .currentPage(search.getNumber()+1)
-                .pageSize(search.getTotalPages())
+    public List<MenuItemResponse> filterByIsVegetarian(boolean isVegetarian) {
+        String sql = "SELECT id, name, image, price, description, is_vegetarian " +
+                "FROM menu_items " +
+                "WHERE is_vegetarian = :isVegetarian";
+
+        RowMapper<MenuItemResponse> rowMapper = (rs, rowNum) -> MenuItemResponse.builder()
+                .id(rs.getLong("id"))
+                .name(rs.getString("name"))
+                .image(rs.getString("image"))
+                .price(rs.getInt("price"))
+                .description(rs.getString("description"))
+                .isVegetarian(rs.getBoolean("is_vegetarian"))
                 .build();
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("isVegetarian", isVegetarian);
+
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate.getDataSource());
+        return namedParameterJdbcTemplate.query(sql, params, rowMapper);
     }
 }

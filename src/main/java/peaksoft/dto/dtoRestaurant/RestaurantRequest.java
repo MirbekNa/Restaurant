@@ -10,4 +10,7 @@ public record RestaurantRequest(String name,
                                 int service) {
     public RestaurantRequest {
     }
+
+
+
 }

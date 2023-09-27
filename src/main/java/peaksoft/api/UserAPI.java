@@ -24,8 +24,7 @@ public class UserAPI {
         return service.getAllUsers(currentPage,pageSize);
     }
 
-    @PostMapping
-            ("/registe")
+    @PostMapping("/registe")
     public SimpleResponse registerUser(@RequestBody @Valid UserRequest userRequest) throws BadCredentialException, BadRequestException {
         return service.registerToJob(userRequest);
     }
@@ -35,6 +34,7 @@ public class UserAPI {
     public  SimpleResponse AcceptOrReject(@RequestParam Long userId,@RequestParam Long restaurantId, @RequestParam String word){
         return service.acceptUser(userId, restaurantId, word);
     }
+
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/update/{id}")
     public SimpleResponse updateUser(@PathVariable Long id,@RequestBody UserRequest userRequest){
