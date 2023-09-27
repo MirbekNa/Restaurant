@@ -30,9 +30,11 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Override
     public List<SubCategoryResponse> getAllSubCategory() {
-        String sql = "SELECT id, name FROM subcategories ;";
+        String sql = "SELECT s.id, s.name, c.name AS categoryName FROM subcategories s join categories c on c.id = s.category_id;";
         RowMapper<SubCategoryResponse> rowMapper = (rs, rowNum) -> SubCategoryResponse.builder()
+                .id(rs.getLong("id"))
                 .name(rs.getString("name"))
+                .categoryName(rs.getString("categoryName"))
                 .build();
 
         NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate.getDataSource());
@@ -41,10 +43,20 @@ public class SubCategoryServiceImpl implements SubCategoryService {
         return subCategories;
     }
 
+
     @Override
     public SimpleResponse saveSubCategory(Long categoryId, SubCategoryRequest subCategoryRequest) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new NoSuchElementException(String.format("Category with id:%s is not found", categoryId)));
         SubCategory subCategory = new SubCategory();
+        String subCategoryName = subCategoryRequest.name();
+        SubCategory existingCategory = repository.findByName(subCategoryName);
+
+        if (existingCategory != null) {
+            return SimpleResponse.builder()
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .message("Category with the same name already exists")
+                    .build();
+        }
         subCategory.setName(subCategoryRequest.name());
         subCategory.setCategory(category);
         repository.save(subCategory);
@@ -146,7 +158,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
         String sql = "SELECT s.id, s.name, c.name AS categoryName\n" +
                 "FROM subcategories s\n" +
                 "         JOIN categories c ON c.id = s.category_id\n" +
-                "order by c.name;\n";
+                "group by s.id, s.name, c.name;\n";
 
         List<SubCategoryResponse> subCategories = jdbcTemplate.query(
                 sql,

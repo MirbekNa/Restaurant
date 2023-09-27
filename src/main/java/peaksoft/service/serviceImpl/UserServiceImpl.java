@@ -54,14 +54,14 @@ public class UserServiceImpl implements UserService {
 
         String countQuery = "SELECT COUNT(*) FROM users";
         int totalRecords = jdbcTemplate.queryForObject(countQuery, Integer.class);
-        String sql = "SELECT id, first_name, last_name, date_of_birth, email, phone_number, role, experience FROM users LIMIT ? OFFSET ?";
+        String sql = "SELECT id, first_name, last_name, date_of_birth, email, phone_number, role,password, experience FROM users LIMIT ? OFFSET ?";
 
         RowMapper<UserResponse> rowMapper = (rs, rowNum) -> UserResponse.builder()
                 .id(rs.getLong("id"))
                 .firstName(rs.getString("first_name"))
                 .lastName(rs.getString("last_name"))
                 .dateOfBirth(rs.getDate("date_of_birth") != null ? rs.getDate("date_of_birth").toLocalDate() : null)
-                .email(rs.getString("email"))
+                .email(rs.getString("email")).password(rs.getString("password"))
                 .phoneNumber(rs.getString("phone_number"))
                 .role(Role.valueOf(rs.getString("role")))
                 .experience(rs.getInt("experience"))

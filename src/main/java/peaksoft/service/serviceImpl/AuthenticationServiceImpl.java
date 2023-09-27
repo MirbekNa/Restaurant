@@ -8,7 +8,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import peaksoft.config.JWTService;
 import peaksoft.dto.dtoAuth.AdminTokenRequest;
-import peaksoft.dto.dtoAuth.AuthenticationRequest;
 import peaksoft.dto.dtoAuth.AuthenticationResponse;
 import peaksoft.dto.dtoAuth.SignInRequest;
 import peaksoft.entity.Restaurant;
@@ -20,7 +19,6 @@ import peaksoft.repository.UserRepository;
 import peaksoft.service.AuthenticationService;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

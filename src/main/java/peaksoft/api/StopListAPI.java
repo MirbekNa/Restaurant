@@ -19,8 +19,8 @@ public class StopListAPI {
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF','WAITER')")
     @GetMapping("/getAll")
-    public List<StopListResponse> getAllStopLists(@RequestParam String ascDesc) {
-        return service.getAll(ascDesc);
+    public List<StopListResponse> getAllStopLists() {
+        return service.getAll();
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','CHEF')")
