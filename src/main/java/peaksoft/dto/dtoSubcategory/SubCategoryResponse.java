@@ -3,7 +3,7 @@ package peaksoft.dto.dtoSubcategory;
 import lombok.Builder;
 
 @Builder
-public record SubCategoryResponse(Long id, String name,String categoryName) {
+public record SubCategoryResponse(Long id, String name, String categoryName) {
     public SubCategoryResponse {
     }
 

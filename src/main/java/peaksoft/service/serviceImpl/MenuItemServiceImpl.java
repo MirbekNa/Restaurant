@@ -2,9 +2,6 @@ package peaksoft.service.serviceImpl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -41,7 +38,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     @Override
     public List<MenuItemResponse> getAllMenuItems() {
         String sql = "SELECT id, name, image, price, description, is_vegetarian " +
-                "FROM menuItems ";
+                "FROM menu_items ";
 
         RowMapper<MenuItemResponse> rowMapper = (rs, rowNum) -> MenuItemResponse.builder()
                 .id(rs.getLong("id"))
@@ -61,6 +58,15 @@ public class MenuItemServiceImpl implements MenuItemService {
         Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new NoSuchElementException(String.format("Restaurant with id:%s does not exist", restaurantId)));
         SubCategory subCategory = subCategoryRepository.findById(suvCategoryId).orElseThrow(() -> new NoSuchElementException(String.format("SubCategory with id:%s does not exist", suvCategoryId)));
         MenuItem menuItem = new MenuItem();
+        String menuItemName = menuItemRequest.name();
+        MenuItem existingCategory = repository.findByName(menuItemName);
+
+        if (existingCategory != null) {
+            return SimpleResponse.builder()
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .message("Category with the same name already exists")
+                    .build();
+        }
         menuItem.setName(menuItemRequest.name());
         menuItem.setDescription(menuItemRequest.description());
         menuItem.setPrice(menuItemRequest.price());
@@ -92,24 +98,39 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItemResponse getMenuItemById(Long id) {
-        MenuItem menuItem = repository.findById(id).orElseThrow(() -> new NoSuchElementException(String.format("MenuItem with id:%s does not exist", id)));
-        List<StopList> all = stopListRepository.findAll();
-        for (StopList s: all) {
-            if (s.getMenuItem().equals(menuItem) && s.getDate().equals(LocalDate.now())){
-                return MenuItemResponse.builder()
-                        .name("This menuItem temporarily no available")
-                        .build();
+        String sql = "SELECT mi.id, mi.name, mi.price, mi.description, mi.image, mi.is_vegetarian " +
+                "FROM menu_items mi " +
+                "WHERE mi.id = ?";
+
+        RowMapper<MenuItemResponse> rowMapper = (rs, rowNum) -> MenuItemResponse.builder()
+                .id(rs.getLong("id"))
+                .name(rs.getString("name"))
+                .price(rs.getInt("price"))
+                .description(rs.getString("description"))
+                .image(rs.getString("image"))
+                .isVegetarian(rs.getBoolean("is_vegetarian"))
+                .build();
+
+        List<MenuItemResponse> menuItems = jdbcTemplate.query(sql, rowMapper, id);
+
+        if (menuItems.isEmpty()) {
+            throw new NoSuchElementException(String.format("MenuItem with id:%s does not exist", id));
+        }
+
+        MenuItemResponse menuItemResponse = menuItems.get(0);
+
+        List<StopList> stopLists = stopListRepository.findAll();
+        for (StopList s : stopLists) {
+            if (s.getMenuItem().getId().equals(id) && s.getDate().equals(LocalDate.now())) {
+                menuItemResponse.name();
+                break;
             }
         }
-        return MenuItemResponse.builder()
-                .id(menuItem.getId())
-                .name(menuItem.getName())
-                .price(menuItem.getPrice())
-                .description(menuItem.getDescription())
-                .image(menuItem.getImage())
-                .isVegetarian(menuItem.isVegetarian())
-                .build();
+
+        return menuItemResponse;
     }
+
+
 
     @Override
     public SimpleResponse deleteMenuItem(Long id) {

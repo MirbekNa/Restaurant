@@ -2,9 +2,6 @@ package peaksoft.service.serviceImpl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -52,14 +49,25 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public SimpleResponse saveCategory(CategoryRequest categoryRequest) {
+                String categoryName = categoryRequest.name();
+        Category existingCategory = repository.findByName(categoryName);
+
+        if (existingCategory != null) {
+                     return SimpleResponse.builder()
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .message("Category with the same name already exists")
+                    .build();
+        }
         Category category = new Category();
-        category.setName(categoryRequest.name());
+        category.setName(categoryName);
         repository.save(category);
+
         return SimpleResponse.builder()
                 .httpStatus(HttpStatus.OK)
                 .message("Successfully saved")
                 .build();
     }
+
 
     @Override
     public SimpleResponse updateCategory(Long id, CategoryRequest categoryRequest) {

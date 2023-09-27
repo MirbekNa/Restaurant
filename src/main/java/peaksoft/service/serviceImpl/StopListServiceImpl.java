@@ -2,7 +2,6 @@ package peaksoft.service.serviceImpl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -19,6 +18,7 @@ import peaksoft.repository.MenuItemRepository;
 import peaksoft.repository.StopListRepository;
 import peaksoft.service.StopListService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -30,10 +30,10 @@ public class StopListServiceImpl implements StopListService {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public List<StopListResponse> getAll(String ascDesc) {
-        String sql = "SELECT s.id, s.reason, s.date, m.name as product_name FROM stopLists s " +
-                "JOIN menu_items m ON s.menu_item_id = m.id " +
-                "ORDER BY m.name " + ascDesc;
+    public List<StopListResponse> getAll() {
+        String sql = "SELECT s.id, s.reason, s.date, m.name as product_name FROM stop_lists s\n" +
+                "                JOIN menu_items m ON s.menu_item_id = m.id\n" +
+                "                ORDER BY m.name ";
 
         RowMapper<StopListResponse> rowMapper = (rs, rowNum) -> StopListResponse.builder()
                 .id(rs.getLong("id"))
@@ -44,33 +44,41 @@ public class StopListServiceImpl implements StopListService {
 
         return jdbcTemplate.query(sql, rowMapper);
     }
+
     @Override
     public SimpleResponse saveStopList(Long menuItemId, StopListRequest stopListRequest) throws BadRequestException {
         MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> new NotFoundException(String.format("MenuItem with id:%s is not present", menuItemId)));
         List<StopList> all = repository.findAll();
         StopList stopList = new StopList();
         stopList.setReason(stopListRequest.reason());
+        LocalDate currentDate = LocalDate.now();
+        if (stopListRequest.date().isBefore(currentDate)) {
+            throw new BadRequestException("StopList date cannot be in the past");
+        }
         stopList.setDate(stopListRequest.date());
         stopList.setMenuItem(menuItem);
-        if (all.isEmpty()){
+        if (all.isEmpty()) {
             repository.save(stopList);
             return SimpleResponse.builder()
                     .httpStatus(HttpStatus.OK)
                     .message("StopList successfully saved")
                     .build();
         }
-        for (StopList list : all) {
 
-            if (list.getMenuItem().equals(menuItem) && list.getDate().equals(stopListRequest.date()) ) {
-                throw new BadRequestException("MenuItem with this date already exist");
+        for (StopList list : all) {
+            if (list.getMenuItem().equals(menuItem) && list.getDate().equals(stopListRequest.date())) {
+                throw new BadRequestException("MenuItem with this date already exists");
+            }
         }
-    }
+
         repository.save(stopList);
         return SimpleResponse.builder()
                 .httpStatus(HttpStatus.OK)
                 .message("StopList successfully saved1")
                 .build();
     }
+
+
 
     @Override
     public SimpleResponse updateStopList(Long id, StopListRequest stopListRequest) {
@@ -92,6 +100,7 @@ public class StopListServiceImpl implements StopListService {
                 .id(stopList.getId())
                 .reason(stopList.getReason())
                 .date(stopList.getDate())
+                .productName(stopList.getMenuItem().getName())
                 .build();
     }
 

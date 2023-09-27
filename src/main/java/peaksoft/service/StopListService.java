@@ -9,7 +9,7 @@ import peaksoft.exceptions.BadRequestException;
 import java.util.List;
 
 public interface StopListService {
-    List<StopListResponse>getAll(String ascDesc);
+    List<StopListResponse>getAll();
 SimpleResponse saveStopList(Long menuItemId, StopListRequest stopListRequest) throws BadRequestException;
 SimpleResponse updateStopList(Long id, StopListRequest stopListRequest);
 StopListResponse getStopListById(Long id);

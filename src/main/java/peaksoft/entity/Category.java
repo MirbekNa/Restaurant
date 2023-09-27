@@ -17,6 +17,7 @@ public class Category {
     @GeneratedValue(generator = "category_gen",strategy = GenerationType.SEQUENCE)
     @SequenceGenerator(name = "category_gen",sequenceName = "category_seq", allocationSize = 1)
     private Long id;
+    @Column(unique = true)
     private String name;
     @OneToMany(mappedBy = "category",cascade = {CascadeType.DETACH,CascadeType.MERGE,CascadeType.REFRESH,CascadeType.REMOVE})
     private List<SubCategory> subCategories;
